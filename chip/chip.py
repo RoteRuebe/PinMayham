@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import time
-#import RPi.GPIO as GPIO
-import GPIO_emul as GPIO
+import RPi.GPIO as GPIO
+#import GPIO_emul as GPIO
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
@@ -96,6 +96,3 @@ class chip():
 
     def getState(self,index):
         return self.pins[index]
-
-c = chip()
-c.push("1")
