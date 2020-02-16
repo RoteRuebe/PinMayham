@@ -1,6 +1,7 @@
-#!/usr/bin/python
-import time, pygame
-import RPi.GPIO as GPIO
+#!/usr/bin/python3
+import time
+#import RPi.GPIO as GPIO
+import GPIO_emul as GPIO
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
@@ -88,7 +89,7 @@ class chip():
         for _ in range(num):
             fin.append(1)
         for _ in range(8-num):
-            fin,append(0)
+            fin.append(0)
         if not LeftToRight:
             fin.reverse()
         self.push(fin)
@@ -96,3 +97,5 @@ class chip():
     def getState(self,index):
         return self.pins[index]
 
+c = chip()
+c.push("1")
