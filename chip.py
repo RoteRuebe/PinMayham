@@ -76,6 +76,24 @@ class chip():
             self.off(index)
             time.sleep(t_off)
 
+    def dis_bin(self.num):
+        if type(num) == bytearray:
+            num = str(bin(int(num)))
+        elif type(num) == int:
+            num = str(num)
+        self.push(num)
+
+    def dis_analog(self,num,LeftToRight=True):
+        fin = []
+        for _ in range(num):
+            fin.append(1)
+        for _ in range(8-num):
+            fin,append(0)
+        if not LeftToRight:
+            fin.reverse()
+        self.push(fin)
+
+
     def getState(self,index):
         return self.pins[index]
 
