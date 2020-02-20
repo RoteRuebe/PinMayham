@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 import copy,random,pygame,time
-#bug: fill row  n with circled numbers fill the  column n
-#with a certain combo you will not be able to assign the circles at all
-#?self.exec_combos()?
-pygame.init()
 class game:
     def __init__ (self,players):
         self.players = players
@@ -15,18 +11,19 @@ class game:
             self.roll_dice()
             for player in self.players:
                 player.turn(self.dice)
-                time.sleep(0.3)
         
         
     def roll_dice(self):
         self.dice[0] = int(random.uniform(1,6))
         self.dice[1] = int(random.uniform(1,6))
-    
+
 class board:
     def __init__ (self,name=""):
         #initalize a 5*5 2d array with cell object s
         row = []
         self.map = []
+        
+        self.combos = {}
         
         for I in range(5):
             row.append(cell())
@@ -51,28 +48,25 @@ class board:
         self.screen_game = self.screen.subsurface(pygame.Rect(80,80,self.offset*5,self.offset*5))
         self.font = pygame.font.SysFont("Comic Sans MS",50)
    
-    def main (self,x=None,y=None):
-        #main loop
-        self.display()
+    def do(self,x,y,display=True):
+        if display:
+            self.display()
         
-        what = None
-        #loop until cell succesfully changed its state
-        if x == None and y == None:
-            while what == None:
-                x,y = self.get_mouse()
-                what = self.do_num(x,y,sum(self.dice)) 
-                if what == None:
-                    pygame.mixer.Sound.play(self.sound_error)
-                
-        pygame.mixer.Sound.play(self.sound_write)
-                
-        self.display()
-        #check for combos and let player choose rings
-        if what == "write":
-            self.combos(x,y)      
+        if self.combos == {}:
+            what = self.do_num(x,y,sum(self.dice))
+            if what == "write":
+                out = self.get_combos(x,y)
+                for I, sout in zip( (y,x,0,0),out.keys() ):
+                    if (sout,I) in self.combos:
+                        self.combos[sout,I] += out[sout]
+                    elif out[sout] != 0:
+                        print(out[sout])
+                        self.combos[(sout,I)] = out[sout] 
+        else:
+           self.exec_combo(x,y)
         
-    def combos(self,x,y):
-        #initalize combo searching and execution
+    def get_combos(self,x,y):
+        #search for combos
         a = self.get_list("row",y)
         b = self.get_list("column",x)
         if x == y:
@@ -89,10 +83,7 @@ class board:
         c = self.check_for_combos_in_list(c)
         d = self.check_for_combos_in_list(d)
         
-        self.exec_combos(x,y,a,"row")
-        self.exec_combos(x,y,b,"column")  
-        self.exec_combos(x,y,c,"quer1")   
-        self.exec_combos(x,y,d,"quer2")   
+        return {"row":a,"column":b,"quer1":c,"quer2":d}
         
         pygame.mouse.set_cursor(*pygame.cursors.arrow)
         
@@ -157,31 +148,50 @@ class board:
                 return 0
         return 3
             
-    def exec_combos(self,x,y,num,mode):
-        #let the player choose, where to put num rings
+    def exec_combo(self,x,y):
         pygame.mouse.set_cursor(*pygame.cursors.diamond)
-        
-        while num > 0:
-            a,b = self.get_mouse()
-            if mode == "row":
-                check = b == y
-            elif mode == "column":
-                check = a == x
-            elif mode == "quer1":
-                check = a == b
-            elif mode == "quer2":
-                check = a + b == 4
+        for key in self.combos.keys():
+            if not self.get(x,y,"circle"):
+                if key[0] == "row":
+                    if key[1] == y:
+                        self.circle(x,y)
+                        self.combos[("row",y)] -= 1
                 
-            if check and not self.get(a,b,"circle"):
-                num -= 1
-                self.circle(a,b)
-                pygame.mixer.Sound.play(self.sound_write)
-                self.display()
-            else:
-                pygame.mixer.Sound.play(self.sound_error)
+                elif key[0] == "column":
+                    if key[1] == x:
+                        self.circle(x,y)
+                        self.combos[("column",x)] -= 1
+                    
+                elif key[0] == "quer1":
+                    if x == y:
+                        self.circle(x,y)
+                        self.combos[("quer1",0)] -= 1
+                    
+                elif key[0] == "quer2":
+                    if x + y == 4:
+                        self.circle(x,y)
+                        self.combos[("quer2",0)] -= 1
                 
-    pygame.mouse.set_cursor(*pygame.cursors.arrow)
- 
+        pygame.mouse.set_cursor(*pygame.cursors.arrow)
+        self.cleanup_combos()
+                        
+    def cleanup_combos(self):
+        clean = []
+        for key, value in self.combos.items():
+            if value == 0:
+                clean.append(key)
+                
+            l = self.get_list(key[0],key[1],False)
+            for index,I in enumerate(l):
+                l[index] = I.hasCircle
+                
+            if l == [True]*5:
+                clean.append(key)
+                
+        for I in clean:
+            self.combos.pop(I)
+            
+            
     def display (self):
         #draw to the pygame display
         #reset screen
@@ -250,6 +260,18 @@ class board:
                         x = int(x/self.offset)
                         y = int(y/self.offset)
                         return x,y
+                    
+    def in_combos(self,key):
+        for I in self.combos:
+            if key == I:
+                return True
+        return False
+    
+    def get_in_combos(self,key):
+        for I in self.combos:
+            if key == I:
+                return I
+        return None
             
     def do_num(self,x,y,num):
         return self.map[y][x].do_num(num)
@@ -303,12 +325,14 @@ class cell:
 class player:
     def __init__ (self,name=""):
         self.name = name
-        self.board = board(self.name)
+        self.board = board()
         
     def turn(self,dice):
-        
-        dice = (1,1)
         self.board.dice = dice
-        self.board.main()
+        self.board.display()
+        x,y = self.board.get_mouse()
+        self.board.do(x,y)
+                
+    pygame.mouse.set_cursor(*pygame.cursors.arrow)
             
 g = game( [player("yannick")] )
