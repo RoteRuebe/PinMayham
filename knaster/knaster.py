@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import copy,random,pygame,time
+import copy, random, pygame, time
+pygame.init()
 class game:
     def __init__ (self,players):
         self.players = players
@@ -10,9 +11,34 @@ class game:
         while True:
             self.roll_dice()
             for player in self.players:
-                player.turn(self.dice)
+                if player.score == None:
+                    player.turn(self.dice)
+                    while player.score:
+                        player.turn(self.dice)
+                    time.sleep(0.3)
+                else:
+                    for player in self.players:
+                        player.get_score()
+                    self.game_over()
+                    break
+                        
+    def game_over(self):
+        for i in self.players:
+            print(i.name,i.score)
+            
+                    
+    def has_combos(self):
+        fin = []
+        for i in self.players:
+            fin.append(i.combos)
+                            
+    def scores(self):
+        fin = []
+        for i in self.players:
+            fin.append(i.score)
         
-        
+        return fin
+    
     def roll_dice(self):
         self.dice[0] = int(random.uniform(1,6))
         self.dice[1] = int(random.uniform(1,6))
@@ -21,6 +47,7 @@ class board:
     def __init__ (self,name=""):
         #initalize a 5*5 2d array with cell object s
         row = []
+        self.written_cells = 0
         self.map = []
         
         self.combos = {}
@@ -49,21 +76,48 @@ class board:
         self.font = pygame.font.SysFont("Comic Sans MS",50)
    
     def do(self,x,y,display=True):
-        if display:
-            self.display()
-        
-        if self.combos == {}:
+        if not self.combos:
             what = self.do_num(x,y,sum(self.dice))
+            if display:
+                self.display()
             if what == "write":
+                self.written_cells += 1
                 out = self.get_combos(x,y)
                 for I, sout in zip( (y,x,0,0),out.keys() ):
                     if (sout,I) in self.combos:
                         self.combos[sout,I] += out[sout]
                     elif out[sout] != 0:
-                        print(out[sout])
-                        self.combos[(sout,I)] = out[sout] 
+                        self.combos[(sout,I)] = out[sout]
+                        
+                if self.written_cells == 25:
+                    return "everything full"
         else:
-           self.exec_combo(x,y)
+            return self.exec_combo(x,y)
+        return what
+           
+    def game_over(self):
+        points = 0
+        point_table = {
+            ("quer1",0):10,
+            ("quer2",0):10,
+            ("row",0):9,
+            ("row",1):8,
+            ("row",2):7,
+            ("row",3):6,
+            ("row",4):5,
+            ("column",0):9,
+            ("column",1):8,
+            ("column",2):7,
+            ("column",3):6,
+            ("column",4):5
+        }
+        for key, value in point_table.items():
+            if False in self.get_list(key[0],key[1],"circle"):
+                pass
+            else:
+                points += value
+                
+        return points
         
     def get_combos(self,x,y):
         #search for combos
@@ -87,33 +141,42 @@ class board:
         
         pygame.mouse.set_cursor(*pygame.cursors.arrow)
         
-    def get_list(self,which,cor=None,get_int=True):
+    def get_list(self,which,cor=None,get="int"):
         fin = []
         if which == "row":
             for cell in self.map[cor]:
-                if get_int:
+                if get == "int":
                     fin.append(cell.num)
+                elif get == "circle":
+                    fin.append(cell.hasCircle)
                 else:
                     fin.append(cell)
                     
         elif which == "column":
             for row in self.map:
-                if get_int:
+                if get == "int":
                     fin.append(row[cor].num)
+                elif get == "circle":
+                    fin.append(row[cor].hasCircle)
                 else:
                     fin.append(row[cor])
         
         elif which == "quer1":
             for I in range(5):
-                if get_int:
+                if get == "int":
                     fin.append(self.map[I][I].num)
+                elif get == "circle":
+                    fin.append(self.map[I][I].hasCircle)
                 else:
                     fin.append(self.map[I][I])
 
+
         elif which == "quer2":
             for I in range(5):
-                if get_int:
+                if get == "int":
                     fin.append(self.map[I][4-I].num)
+                elif get == "circle":
+                    fin.append(self.map[I][4-I].hasCircle)
                 else:
                     fin.append(self.map[I][4-I])
         
@@ -136,10 +199,8 @@ class board:
                 return 1
             
             if list.count(I) == 2:
-                print(I)
                 for J in range(2,13):
                     if list.count(J) == 2 and J != I:
-                        print(J)
                         return 1
             
         list.sort()
@@ -173,6 +234,7 @@ class board:
                         self.combos[("quer2",0)] -= 1
                 
         pygame.mouse.set_cursor(*pygame.cursors.arrow)
+        self.display()
         self.cleanup_combos()
                         
     def cleanup_combos(self):
@@ -197,12 +259,36 @@ class board:
         #reset screen
         self.screen.fill((0,0,0))
         #draw meta-information
+        border_offset = 15
         dice1 = self.dice_img[self.dice[0]-1]
         dice2 = self.dice_img[self.dice[1]-1]
-        self.screen.blit(dice1,(0,0))
-        self.screen.blit(dice2,(50,0))
+        self.screen.blit(dice1,(border_offset+dice1.get_width(),410-dice1.get_height()-border_offset))
+        self.screen.blit(dice2,(border_offset,410-dice2.get_height()-border_offset))
         name = self.font.render(self.name,True,(255,255,255))
-        self.screen.blit(name,(205-name.get_width()/2,0))
+        self.screen.blit(name,(410-name.get_width()-border_offset,410-name.get_height()-border_offset))
+        
+        x = -self.offset
+        y = -self.offset
+        for i in 10,9,8,7,6,5:
+            cx = self.screen_game.get_offset()[0] + x
+            cy = self.screen_game.get_offset()[1] + y
+            num = self.font.render(str(i),True,(200,200,200))
+            if i != 10:
+                self.screen.blit(num,(cx+num.get_width()-2,cy))
+            else:
+                self.screen.blit(num,(cx,cy))
+            x += self.offset
+            
+        for i in 10,9,8,7,6,5:
+            cx = self.screen_game.get_offset()[0] + x
+            cy = self.screen_game.get_offset()[1] + y
+            num = self.font.render(str(i),True,(200,200,200))
+            if i != 10:
+                self.screen.blit(num,(cx+num.get_width(),cy+num.get_height()/2-6))
+            else:
+                self.screen.blit(num,(cx,cy))
+            y += self.offset
+        
         
         
         #draw numbers
@@ -252,14 +338,15 @@ class board:
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1:
-                        x = event.pos[0]
-                        y = event.pos[1]
-                        x -= self.screen_game.get_offset()[0]
-                        y -= self.screen_game.get_offset()[1]
-                        x = int(x/self.offset)
-                        y = int(y/self.offset)
-                        return x,y
+                    if event.button == 1:                        
+                            x = event.pos[0]
+                            y = event.pos[1]
+                            x -= self.screen_game.get_offset()[0]
+                            y -= self.screen_game.get_offset()[1]
+                            x = int(x/self.offset)
+                            y = int(y/self.offset)
+                            if x >= 0 and x < 5 and y >= 0 and y < 5:
+                                return x,y
                     
     def in_combos(self,key):
         for I in self.combos:
@@ -323,16 +410,28 @@ class cell:
         
 
 class player:
-    def __init__ (self,name=""):
+    def __init__ (self,name):
+        self.score = None
         self.name = name
-        self.board = board()
+        self.board = board(name)
         
     def turn(self,dice):
         self.board.dice = dice
         self.board.display()
-        x,y = self.board.get_mouse()
-        self.board.do(x,y)
+        do = None
+        while do == None:
+            x,y = self.board.get_mouse()
+            do = self.board.do(x,y)
+            if do == "everything full":
+                self.get_score()
+                break   
+        
+    def get_score(self):
+        while self.board.combos:
+            self.turn()
+            
+        self.score = self.board.game_over()
                 
     pygame.mouse.set_cursor(*pygame.cursors.arrow)
             
-g = game( [player("yannick")] )
+g = game( [player("yannick")])
