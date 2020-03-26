@@ -76,6 +76,9 @@ class board:
         self.font = pygame.font.SysFont("Comic Sans MS",50)
    
     def do(self,x,y,display=True):
+        if self.written_cells == 25:
+            return "everything full"
+        
         if not self.combos:
             what = self.do_num(x,y,sum(self.dice))
             if display:
@@ -89,8 +92,7 @@ class board:
                     elif out[sout] != 0:
                         self.combos[(sout,I)] = out[sout]
                         
-                if self.written_cells == 25:
-                    return "everything full"
+
         else:
             return self.exec_combo(x,y)
         return what
@@ -428,7 +430,7 @@ class player:
         
     def get_score(self):
         while self.board.combos:
-            self.turn()
+            self.turn((0,0))
             
         self.score = self.board.game_over()
                 
