@@ -20,8 +20,9 @@ class physical_object:
                 self.f[1] *= -1
             if 1 in collisions or 3 in collisions:
                 self.f[0] *= -1
-            if len(collisions) >= 1:
-                print(collisions,self)
+                
+            if len(collisions) > 0 and type(collisions[0]) == physical_object:
+                self.collide(collisions[0])
         
         f = self.gravitate(gravitate,test)
         x = self.x; y = self.y
@@ -31,6 +32,12 @@ class physical_object:
         if not test:
             self.x = x; self.y = y
         return x, y
+    
+    def collide(self,other):
+        self.f[0] *= -1
+        self.f[1] *= -1
+        other.f[0] *= -1
+        other.f[1] *= -1
         
     def gravitate(self,other=None,test=False):
         if other == None:
