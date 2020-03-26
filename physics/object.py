@@ -15,10 +15,10 @@ class object:
         
     def tick(self,gravitate=None,test=False):
         if not test:
-            collision = self.world.collide(self.l,self.tick(gravitate,True))
-            if collision in [0,2]:
+            collisions = self.world.collide(self.l,self.tick(gravitate,True))
+            if 0 in collisions or 2  in collisions:
                 self.f[1] *= -1
-            elif collision in [1,3]:
+            if 1 in collisions or 3 in collisions:
                 self.f[0] *= -1
         
         f = self.gravitate(gravitate,test)

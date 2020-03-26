@@ -11,8 +11,8 @@ class world:
         for entity in self.entitys:
             entity.tick()
             
-    def draw(self):
-        #self.surface.fill((0,0,0))
+    def draw(self,delete=True):
+        if delete:  self.surface.fill((0,0,0))
         for entity in self.entitys:
             entity.draw()
             
@@ -21,16 +21,18 @@ class world:
             y = x[1]
             x = x[0]
             
+        colliding = []
+            
         if y < 0:
-            return 0
+            colliding.append(0)
         if x + l > self.size:
-            return 1
+            colliding.append(1)
         if y + l > self.size:
-            return 2
+            colliding.append(2)
         if x < 0:
-            return 3
+            colliding.append(3)
         
-        return None
+        return colliding
         
     def register(self,other):
         self.entitys.append(other)
