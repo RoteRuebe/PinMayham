@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
-import object, pygame, time
+import object, world, pygame
 pygame.display.init()
 screen = pygame.display.set_mode((500,500))
 
-gravity = 0.005
+w = world.world(0,500,screen)
 
-obj = object.object(100,450,50,1,gravity)
-obj.apply_force((10,0))
-ymin = 500
+obj = object.object(250,250,50,10,w)
+obj.apply_force((1,1))
 
 while True:
-    obj.tick()
-    if obj.y < ymin:
-        ymin = obj.y
-        print(ymin)
-
-    obj.draw(screen)
+    w.tick()
+    w.draw()
     pygame.display.flip()
-    
