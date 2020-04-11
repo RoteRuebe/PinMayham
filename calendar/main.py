@@ -112,8 +112,8 @@ class main:
                 self.show_select()
                 
             elif self.mode == "view":
-                self.new()
                 self.mode = "select"
+                self.new()
                 
         elif self.selector.get_selected() == "--------":
             if self.selector.h == "down":

@@ -38,21 +38,16 @@ def main(box, mode, filename="", data={}):
     try:
         txt.edit(terminate)
     except KeyboardInterrupt:
-        exit()
         return
     
-    message = txt.gather().split("\n")
+    message = txt.gather().replace("-","").split("\n")
 
     for i,m in enumerate(message):
         message[i] = m.strip()
         
-    w = ["title","desc","info","from","until","importance"]
-    d = {}
-    for i,j in zip(w,message[1:]):
-        if j not in ["-","/","_"]:
-            d[i] = j
-        else:
-            d[i] = ""
+    d = {"title":"","desc":"","info":"","from":"","until":"","importance":0}
+    for key,m in zip(d.keys(),message[1:]):
+            d[key] = m
             
     try:    d["importance"] = int(d["importance"])
     except: pass
