@@ -1,4 +1,4 @@
-#!/usr/bin/python
+19#!/usr/bin/python
 import copy, subprocess, random, pygame, time
 pygame.display.init()
 class cell:
@@ -178,7 +178,6 @@ class game():
                                     J.kill()
                         
                         if event.key == self.gen_forwards:
-                        if event.key == self.gen_forwards:
                             self.gameworld.generation()
             time.sleep(self.delay_draw)
     
@@ -196,11 +195,11 @@ class game():
                     if event.key == self.end:
                         return
                     
-                    if event.key == add_delay:
+                    if event.key == pygame.K_UP:
                         self.simulate_delay += 0.01
                         print self.simulate_delay
                     
-                    if event.key == subtract_delay:
+                    if event.key == pygame.K_DOWN:
                         if self.simulate_delay != 0:
                             self.simulate_delay -= 0.01
                         print self.simulate_delay
