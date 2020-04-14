@@ -6,7 +6,8 @@ from curses.textpad import rectangle
 class main:
     def __init__ (self,stdscr):
         curses.curs_set(False)
-        os.chdir("./entries")
+        subprocess.getoutput("dropbox start")
+        os.chdir(os.path.expanduser("~/Dropbox/entries"))
         self.ax = 2
         self.ay = 2
         self.ex = curses.COLS-2
@@ -173,8 +174,8 @@ class main:
         self.body.refresh()
         
     def loaddata(self,):
-        out = subprocess.run("ls",capture_output=True).stdout
-        out = out.decode("utf-8").split("\n")[:-1]
+        out = subprocess.getoutput("ls")
+        out = out.split("\n")[:-1]
         self.out = out
         self.selector.l = self.out+self.control_entrys
         
