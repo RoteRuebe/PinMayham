@@ -6,8 +6,7 @@ from curses.textpad import rectangle
 class main:
     def __init__ (self,stdscr):
         curses.curs_set(False)
-        subprocess.getoutput("dropbox start")
-        os.chdir(os.path.expanduser("~/Dropbox/entries"))
+        os.chdir("./entries")
         self.ax = 2
         self.ay = 2
         self.ex = curses.COLS-2
@@ -175,8 +174,9 @@ class main:
         
     def loaddata(self,):
         out = subprocess.getoutput("ls")
-        out = out.split("\n")[:-1]
-        self.out = out
+        self.out = out.split("\n")
+        if not self.out[0]:
+            self.out = []
         self.selector.l = self.out+self.control_entrys
         
     def daysleft(self):
@@ -185,6 +185,7 @@ class main:
         return (until-today).days
     
     def exit(self):
+        #subprocess.getoutput("cp ./* ../upload")
         self.clear()
         x = 68
         y = 12
