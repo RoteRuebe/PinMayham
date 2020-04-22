@@ -1,18 +1,14 @@
 #!/usr/bin/env python3
-import world, entity
+import world, entity, curses
 
-class main:
-    def __init__ (self):
-        self.World = world.world()
-        self.Player = entity.player(0,0,self.World)
-        
-        self.loop()
-        
-    def loop (self):
-        while True:
-            self.World.display()
-            for ent in self.World.entitys:
-                ent.tick()
-                
+def main(screen):
+    curses.curs_set(False)
+    World = world.world(screen)
+    Player = entity.player(0,0,World)
 
-m = main()
+    while True:
+        World.display()
+        World.tick()
+
+
+curses.wrapper(main)
