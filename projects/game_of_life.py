@@ -1,4 +1,4 @@
-19#!/usr/bin/python
+#!/usr/bin/python
 import copy, subprocess, random, pygame, time
 pygame.display.init()
 class cell:
