@@ -154,7 +154,7 @@ class main:
         
     def delete_entry(self):
         subprocess.getoutput("rm "+"'"+self.selector.get_selected()+"'")
-        self.loaddata()
+        self._loadentries()
         self.display()
         
     def _display_file(self,box):
